@@ -25,7 +25,7 @@ void loop(void) {
 void adjust_led(int photocellReading){
   // LED gets brighter the darker it is at the sensor
   // that means we have to -invert- the reading from 0-1023 back to 1023-0
-  photocellReading = 1023 - int(val);
+  photocellReading = 1023 - int(photocellReading);
 
   if(photocellReading < 0){
     photocellReading = 0;
