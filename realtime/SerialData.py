@@ -37,6 +37,7 @@ class SerialData(object):
                 rtscts=0,
                 interCharTimeout=None
             )
+            time.sleep(2)
         except serial.serialutil.SerialException:
             self.ser = None
         else:
