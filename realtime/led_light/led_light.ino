@@ -16,17 +16,17 @@ void setup(void) {
 }
  
 void loop(void) {
-//  photocellReading = analogRead(photocellPin);  
   val = analogRead(photocellPin);
-  Serial.println(val,DEC);     // the raw analog reading
- 
+  Serial.println(val,DEC);
+  adjust_led(val);
+  delay(100);
+}
+
+void adjust_led(int photocellReading){
   // LED gets brighter the darker it is at the sensor
   // that means we have to -invert- the reading from 0-1023 back to 1023-0
   photocellReading = 1023 - int(val);
 
- // Serial.print("Analog reading = ");
- //Serial.println(photocellReading);     // the raw analog reading
-  
   if(photocellReading < 0){
     photocellReading = 0;
   }
@@ -38,8 +38,4 @@ void loop(void) {
   }
 
   analogWrite(LEDpin, LEDbrightness);
-//  Serial.print("\tLED = ");
-// Serial.println(LEDbrightness);
- 
-  delay(100);
 }
