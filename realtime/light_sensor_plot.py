@@ -16,6 +16,7 @@ class LightMonitor(FigureCanvas):
     def __init__(self):
         # initialize the iteration counter
         self.cnt = 0
+        self.window_size = 30
 
         # Get the class for getting data from light sensor
         self.datagen = LightSensor.SerialData()
@@ -31,7 +32,7 @@ class LightMonitor(FigureCanvas):
         self.fig = Figure()
         self.ax = self.fig.add_subplot(111)
         FigureCanvas.__init__(self, self.fig)
-        self.ax.set_xlim(0, 30)
+        self.ax.set_xlim(0, self.window_size)
         self.ax.set_ylim(0, 600)
 
         # Initial empty plot
@@ -68,8 +69,8 @@ class LightMonitor(FigureCanvas):
 
         # force a redraw of the Figure - we start with an initial
         # horizaontal axes but 'scroll' as time goes by
-        if(self.cnt >= 30):
-            self.ax.set_xlim(self.cnt - 30, self.cnt + 1)
+        if(self.cnt >= self.window_size):
+            self.ax.set_xlim(self.cnt - self.window_size, self.cnt + 15)
         self.fig.canvas.draw()
 
         self.cnt += 1
