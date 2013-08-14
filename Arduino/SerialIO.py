@@ -13,7 +13,7 @@ def receiving(ser):
     global last_received
     buffer = ''
     while True:
-        buffer = buffer + ser.read(ser.inWaiting()).decode()
+        buffer = buffer + ser.readline(ser.inWaiting()).decode()
         if '\n' in buffer:
             lines = buffer.split('\n') # Guaranteed to have at least 2 entries
             last_received = lines[-2]
@@ -29,13 +29,6 @@ class SerialData(object):
             self.ser = serial.Serial(
                 port = '/dev/ttyACM0',
                 baudrate = 115200,
-                bytesize=serial.EIGHTBITS,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
-                timeout=0.1,
-                xonxoff=0,
-                rtscts=0,
-                interCharTimeout=None
             )
             time.sleep(2)
         except serial.serialutil.SerialException:
@@ -46,11 +39,10 @@ class SerialData(object):
     def next(self):
         if not self.ser:
             return 0
-        # return a float value or try a few times until we get one
         for i in range(40):
             raw_line = last_received
             try:
-                return float(raw_line.strip())
+                return raw_line.strip()
             except ValueError:
                 time.sleep(.005)
         return 0.
