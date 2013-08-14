@@ -1,3 +1,5 @@
+#include <json_arduino.h>
+
 #include "DHT.h"
 
 #define DHTPIN 2
@@ -5,9 +7,23 @@
 
 DHT dht(DHTPIN, DHTTYPE);
 
+#include <stdarg.h>
+
+char json_string[256];
+token_list_t *token_list = NULL;
+
+void prints(char *fmt, ... ){
+        char tmp[128]; // resulting string limited to 128 chars
+        va_list args;
+        va_start (args, fmt );
+        vsnprintf(tmp, 128, fmt, args);
+        va_end (args);
+        Serial.println(tmp);
+}
+
 void setup() {
-  Serial.begin(9600); 
-  Serial.println("Starting ee");
+  Serial.begin(115200); 
+  prints("{\"msg\": \"Starting ee}\"}");
  
   dht.begin();
 }
@@ -15,7 +31,7 @@ void setup() {
 void loop() {
   read_temp_humidity();
 
-  delay(100);
+  delay(1000);
 }
 
 /*
@@ -26,18 +42,14 @@ void loop() {
 */
 void read_temp_humidity() {
 
-  float h = dht.readHumidity();
-  float t = dht.readTemperature();
+  int h = dht.readHumidity();
+  int t = dht.readTemperature();
 
   // check if returns are valid, if they are NaN (not a number) then something went wrong!
   if (isnan(t) || isnan(h)) {
-    Serial.println("Failed to read from DHT");
+    prints("Failed to read from DHT");
   } else {
-    Serial.print("Humidity: "); 
-    Serial.print(h);
-    Serial.print(" %\t");
-    Serial.print("Temperature: "); 
-    Serial.print(t);
-    Serial.println(" *C");
+    prints("{\"humidity\": %d, \"temp\": %d}",h,t);    
+
   }  
 }
