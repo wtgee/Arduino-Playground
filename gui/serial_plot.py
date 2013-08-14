@@ -36,9 +36,12 @@ class ArduinoSerialMonitor(FigureCanvas):
         self.ax.set_xlim(0, self.window_size)
         self.ax.set_ylim(0, 600)
 
-        # Initial empty plot
-        self.serial = []
-        self.l_light, = self.ax.plot([],self.serial, label='serial')
+        # Do an initial reading for the keys
+        initial_reading = self.get_reading()
+        for key in initial_reading.keys():
+            self.sensors.key = []
+            self.l_light, = self.ax.plot([],self.sensors.key, label=key)
+
         self.ax.legend()
         self.fig.canvas.draw()
 
@@ -48,25 +51,22 @@ class ArduinoSerialMonitor(FigureCanvas):
         l_value = self.datagen.next()
         sensor_data = json.loads(l_value)
 
-        return sensor_data.temp
+        return sensor_data
 
     def get_reading(self):
         """Get the serial reading from the sensor"""
         # take the current serial sensor information
-        serial_value = self._prepare_sensor_data()
-
-        return [serial_value]
+        return self._prepare_sensor_data()
 
     def timerEvent(self, evt):
         """Custom timerEvent code, called at timer event receive"""
-        # get the serial
-        result = self.get_reading()
 
-        # append new data to the datasets
-        self.serial.append(result[0])
+        for key in self.get_reading():
+            # append new data to the datasets
+            self.sensors.key.append(result[0])
 
-        # update lines data using the lists with new data
-        self.l_light.set_data(range(len(self.serial)), self.serial)
+            # update lines data using the lists with new data
+            self.l_light.set_data(range(len(self.sensors.key)), self.sensors.key)
 
         # force a redraw of the Figure - we start with an initial
         # horizontal axes but 'scroll' as time goes by
