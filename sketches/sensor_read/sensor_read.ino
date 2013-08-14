@@ -1,5 +1,3 @@
-#include <json_arduino.h>
-
 #include "DHT.h"
 
 #define DHTPIN 2
@@ -8,9 +6,6 @@
 DHT dht(DHTPIN, DHTTYPE);
 
 #include <stdarg.h>
-
-char json_string[256];
-token_list_t *token_list = NULL;
 
 void prints(char *fmt, ... ){
         char tmp[128]; // resulting string limited to 128 chars
