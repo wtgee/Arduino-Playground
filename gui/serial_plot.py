@@ -15,40 +15,47 @@ from Arduino.SerialIO import SerialData
 class ArduinoSerialMonitor(FigureCanvas):
     """Realtime plotting of Arduino serial sensor data"""
     def __init__(self):
-        # initialize the iteration counter
+        # initialize the iteration counter for scrolling window
         self.cnt = 0
         self.window_size = 30
 
         # Get the class for getting data from serial sensor
-        self.datagen = SerialData()
+        self.serial_reader = SerialData()
 
-        self._setup_image()
+        # Hold information on sensors read
+        self.sensors = dict()
+
+        self._setup_plot()
 
         # Timer
         self.timerEvent(None)
         self.timer = self.startTimer(100)
 
-    def _setup_image(self):
+    def _setup_plot(self):
         # Image setup
         self.fig = Figure()
-        self.ax = self.fig.add_subplot(111)
-        FigureCanvas.__init__(self, self.fig)
-        self.ax.set_xlim(0, self.window_size)
-        self.ax.set_ylim(0, 600)
 
-        # Do an initial reading for the keys
+        # Do an initial reading of the data to get info
+        # on the sensors. Build subplots
         initial_reading = self.get_reading()
-        for key in initial_reading.keys():
+        for sensor, value in initial_reading.items():
+            self.sensors[sensor] = self.fig.add_subplot(111)
+            FigureCanvas.__init__(self, self.fig)
+            self.ax.set_xlim(0, self.window_size)
+            self.ax.set_ylim(0, 600)
+
             self.sensors.key = []
             self.l_light, = self.ax.plot([],self.sensors.key, label=key)
 
-        self.ax.legend()
+            self.ax.legend()
+
+        # Draw the initial canvas
         self.fig.canvas.draw()
 
 
     def _prepare_sensor_data(self):
         """Helper function to return serial sensor info"""
-        l_value = self.datagen.next()
+        l_value = self.serial_reader.next()
         sensor_data = json.loads(l_value)
 
         return sensor_data
