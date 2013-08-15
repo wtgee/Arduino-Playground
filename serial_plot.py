@@ -57,7 +57,7 @@ class ArduinoSerialMonitor(FigureCanvas):
             # Create plot, set x and y axes
             ax = self.fig.add_subplot(111)
             ax.set_xlim(0, self.window_size)
-            ax.set_ylim(0, 600)
+            ax.set_ylim(0, 100)
 
             s_plot, = ax.plot([],sensor_values, label=sensor.title())
 
