@@ -39,9 +39,18 @@ class ArduinoSerialMonitor(FigureCanvas):
         FigureCanvas.__init__(self, self.fig)
 
         # Do an initial reading of the data to get info
-        # on the sensors. Build subplots
+        # on the sensors. Arduino sends a number of blank lines
+        # to start so we skip those
         initial_reading = self.get_reading()
+        while True:
+            if len(initial_reading):
+                break
+
+            initial_reading = self.get_reading()
+
+        print("initial_reading: {}".format(initial_reading))
         for sensor in initial_reading.keys():
+            print("Adding sensor: {}".format(sensor))
             # Create an empty array to store data for this sensor
             sensor_values = []
 
@@ -56,8 +65,8 @@ class ArduinoSerialMonitor(FigureCanvas):
 
             # Add the ax and plot to our monitor
             self.sensor_readings[sensor] = sensor_values
-            self.sensor_plots[sensor]['plot'] = s_plot
-            self.sensor_plots[sensor]['ax'] = ax
+            plot_dict = {'plot': s_plot, 'ax': ax}
+            self.sensor_plots[sensor] = plot_dict
 
         # Draw the initial canvas
         self.fig.canvas.draw()
@@ -65,8 +74,14 @@ class ArduinoSerialMonitor(FigureCanvas):
 
     def _prepare_sensor_data(self):
         """Helper function to return serial sensor info"""
-        l_value = self.serial_reader.next()
-        sensor_data = json.loads(l_value)
+        sensor_value = self.serial_reader.next()
+        sensor_data = dict()
+        if len(sensor_value) > 0:
+            print(sensor_value)
+            try:
+                sensor_data = json.loads(sensor_value)
+            except ValueError:
+                print("Bad JSON: {0}".format(sensor_value))
 
         return sensor_data
 
@@ -79,6 +94,7 @@ class ArduinoSerialMonitor(FigureCanvas):
         """Custom timerEvent code, called at timer event receive"""
 
         for sensor, value in self.get_reading().items():
+            print("{} {}".format(sensor,value))
             # Append new data to the datasets
             self.sensor_readings[sensor].append(value)
 

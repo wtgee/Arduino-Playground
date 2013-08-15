@@ -18,7 +18,9 @@ void prints(char *fmt, ... ){
 
 void setup() {
   Serial.begin(115200); 
-  prints("{\"msg\": \"Starting ee}\"}");
+
+  // Send initial blank values
+  prints("{\"humidity\": 0, \"temp\": 0}");
  
   dht.begin();
 }
