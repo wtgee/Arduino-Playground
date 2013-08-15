@@ -16,14 +16,15 @@ class ArduinoSerialMonitor(FigureCanvas):
     """Realtime plotting of Arduino serial sensor data"""
     def __init__(self):
         # initialize the iteration counter for scrolling window
-        self.cnt = 0
+        self.count = 0
         self.window_size = 30
 
         # Get the class for getting data from serial sensor
         self.serial_reader = SerialData()
 
         # Hold information on sensors read
-        self.sensors = dict()
+        self.sensor_readings = dict()
+        self.sensor_plots = dict()
 
         self._setup_plot()
 
@@ -35,19 +36,28 @@ class ArduinoSerialMonitor(FigureCanvas):
         # Image setup
         self.fig = Figure()
 
+        FigureCanvas.__init__(self, self.fig)
+
         # Do an initial reading of the data to get info
         # on the sensors. Build subplots
         initial_reading = self.get_reading()
-        for sensor, value in initial_reading.items():
-            self.sensors[sensor] = self.fig.add_subplot(111)
-            FigureCanvas.__init__(self, self.fig)
-            self.ax.set_xlim(0, self.window_size)
-            self.ax.set_ylim(0, 600)
+        for sensor in initial_reading.keys():
+            # Create an empty array to store data for this sensor
+            sensor_values = []
 
-            self.sensors.key = []
-            self.l_light, = self.ax.plot([],self.sensors.key, label=key)
+            # Create plot, set x and y axes
+            ax = self.fig.add_subplot(111)
+            ax.set_xlim(0, self.window_size)
+            ax.set_ylim(0, 600)
 
-            self.ax.legend()
+            s_plot, = ax.plot([],sensor_values, label=sensor.title())
+
+            ax.legend()
+
+            # Add the ax and plot to our monitor
+            self.sensor_readings[sensor] = sensor_values
+            self.sensor_plots[sensor]['plot'] = s_plot
+            self.sensor_plots[sensor]['ax'] = ax
 
         # Draw the initial canvas
         self.fig.canvas.draw()
@@ -68,20 +78,29 @@ class ArduinoSerialMonitor(FigureCanvas):
     def timerEvent(self, evt):
         """Custom timerEvent code, called at timer event receive"""
 
-        for key in self.get_reading():
-            # append new data to the datasets
-            self.sensors.key.append(result[0])
+        for sensor, value in self.get_reading().items():
+            # Append new data to the datasets
+            self.sensor_readings[sensor].append(value)
 
-            # update lines data using the lists with new data
-            self.l_light.set_data(range(len(self.sensors.key)), self.sensors.key)
+            # Scrolling horizontal axis is calculated - basically
+            # if our number of readings is abover the size, start scrolling.
+            # We add 15 so the right edge of line is not butting up against edge
+            # of graph but has some nice buffer space
+            if(self.count >= self.window_size):
+                self.sensor_plots[sensor]['ax'].set_xlim(
+                        self.count - self.window_size,
+                        self.count + 15
+                        )
 
-        # force a redraw of the Figure - we start with an initial
-        # horizontal axes but 'scroll' as time goes by
-        if(self.cnt >= self.window_size):
-            self.ax.set_xlim(self.cnt - self.window_size, self.cnt + 15)
+            num_readings = len(self.sensor_readings[sensor])
+
+            # Update lines data using the lists with new data
+            self.sensor_plots[sensor].set_data(range(num_readings), self.sensor_readings[sensor])
+
+        # Force a redraw of the Figure
         self.fig.canvas.draw()
 
-        self.cnt += 1
+        self.count += 1
 
 
 # Build and run the actual appliation
