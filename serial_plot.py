@@ -111,7 +111,7 @@ class ArduinoSerialMonitor(FigureCanvas):
             num_readings = len(self.sensor_readings[sensor])
 
             # Update lines data using the lists with new data
-            self.sensor_plots[sensor].set_data(range(num_readings), self.sensor_readings[sensor])
+            self.sensor_plots[sensor]['plot'].set_data(range(num_readings), self.sensor_readings[sensor])
 
         # Force a redraw of the Figure
         self.fig.canvas.draw()
