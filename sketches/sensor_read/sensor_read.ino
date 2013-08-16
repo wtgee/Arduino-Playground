@@ -39,21 +39,21 @@ void setup() {
 
 void loop() {
   if (millis() - last_print > 1000) {
-    /* One second elapsed, send message. */
+    // One second elapsed, send message.
     aJsonObject *msg = read_sensors();
     aJson.print(msg, &serial_stream);
-    Serial.println(); /* Add newline. */
+    Serial.println(); // Add newline 
     aJson.deleteItem(msg);
     last_print = millis();
   }
 
   if (serial_stream.available()) {
-    /* First, skip any accidental whitespace like newlines. */
+    // First, skip any accidental whitespace like newlines.
     serial_stream.skip();
   }
 
   if (serial_stream.available()) {
-    /* Something real on input, let's take a look. */
+    // Something real on input, let's take a look. 
     aJsonObject *msg = aJson.parse(&serial_stream);
     processMessage(msg);
     aJson.deleteItem(msg);
@@ -65,18 +65,10 @@ aJsonObject *read_sensors()
 {
   aJsonObject *msg = aJson.createObject();
 
-    // Get the analog values first
+    // Read the analog values and map it to a percentage
   int analogValues[6];
   for (int i = 0; i < 6; i++) {
-    sensorValue = analogRead(i);
-
-    // apply the calibration to the sensor reading
-    sensorValue = map(sensorValue, sensorMin[i], sensorMax[i], 0, 100);
-
-    // in case the sensor value is outside the range seen during calibration
-    sensorValue = constrain(sensorValue, 0, 100);
-
-    analogValues[i] = sensorValue;
+    analogValues[i] = map(analogRead(i), 0, 1023, 0, 100);
   }
   aJsonObject *analog = aJson.createIntArray(analogValues, 6);
   aJson.addItemToObject(msg, "analog", analog);
@@ -141,6 +133,10 @@ void calibrate_analog(){
           sensorMin[i] = sensorValue;
         }
       }
+  }
+
+  for (int i = 0; i < 6; i++) {
+      prints("%d: %d %d",i,sensorMin[i],sensorMax[i]);
   }
 
   // signal the end of the calibration period
