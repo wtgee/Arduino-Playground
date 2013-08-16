@@ -13,14 +13,21 @@ def receiving(ser):
     global last_received
     buffer = ''
     while True:
-        buffer = buffer + ser.readline(ser.inWaiting()).decode()
-        if '\n' in buffer:
-            lines = buffer.split('\n') # Guaranteed to have at least 2 entries
-            last_received = lines[-2]
-            #If the Arduino sends lots of empty lines, you'll lose the
-            #last filled line, so you could make the above statement conditional
-            #like so: if lines[-2]: last_received = lines[-2]
-            buffer = lines[-1]
+        try:
+            buffer = buffer + ser.readline(ser.inWaiting()).decode()
+            if '\n' in buffer:
+                lines = buffer.split('\n') # Guaranteed to have at least 2 entries
+                last_received = lines[-2]
+                #If the Arduino sends lots of empty lines, you'll lose the
+                #last filled line, so you could make the above statement conditional
+                #like so: if lines[-2]: last_received = lines[-2]
+                buffer = lines[-1]
+        except IOError:
+            print("Device is not sending messages")
+            time.sleep(2)
+        except UnicodeDecodeError:
+            print("Unicode problem")
+            time.sleep(2)
 
 
 class SerialData(object):
