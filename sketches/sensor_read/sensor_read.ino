@@ -33,7 +33,7 @@ void setup() {
 void loop() {
   if (millis() - last_print > 1000) {
     /* One second elapsed, send message. */
-    aJsonObject *msg = createMessage();
+    aJsonObject *msg = read_sensors();
     aJson.print(msg, &serial_stream);
     Serial.println(); /* Add newline. */
     aJson.deleteItem(msg);
@@ -53,43 +53,8 @@ void loop() {
   }
 }
 
-/*
-* read_temp
- *
- * Reading temperature or humidity takes about 250 milliseconds!
- * Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
- */
-int read_temp() {
-
-  int t = dht.readTemperature();
-
-  if (!isnan(t)) {
-    return t;
-  }
-
-  return 0;
-}
-
-/*
-* read_humidity
- *
- * Reading temperature or humidity takes about 250 milliseconds!
- * Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
- */
-int read_humidity() {
-
-  int h = dht.readHumidity();
-
-  // check if returns are valid, if they are NaN (not a number) then something went wrong!
-  if (!isnan(h)) {
-      return h;
-  }
-
-  return 0;
-}
-
 /* Generate message like: { "analog": [0, 200, 400, 600, 800, 1000] } */
-aJsonObject *createMessage()
+aJsonObject *read_sensors()
 {
   aJsonObject *msg = aJson.createObject();
 
@@ -102,8 +67,8 @@ aJsonObject *createMessage()
   aJson.addItemToObject(msg, "analog", analog);
 
   // Temp/Humidity
-  aJson.addNumberToObject(msg, "temp", read_temp());
-  aJson.addNumberToObject(msg, "humidity", read_humidity());
+  aJson.addNumberToObject(msg, "temp", dht.readTemp());
+  aJson.addNumberToObject(msg, "humidity", dht.readHumidity());
 
   return msg;
 }
