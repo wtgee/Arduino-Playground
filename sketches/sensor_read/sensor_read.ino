@@ -31,29 +31,6 @@ void setup() {
 }
 
 void loop() {
-    /*
-  root = aJson.createObject();
-
-  aJson.addNumberToObject(root,"temp",read_temp());
-  aJson.addNumberToObject(root,"humidity",read_humidity());
-
-  int photoCells[] = { 0,1,2,3,4  };
-
-  char str[15];
-  for (int i = 0; i < 5; i++){
-    sprintf(str,"photocell.%d",i);
-    aJson.addNumberToObject(root, str, read_photocell(i));
-  }
-
-  Serial.print(aJson.print(root));
-
-  Serial.println();
-  delay(500);
-  */
-
-
-
-
   if (millis() - last_print > 1000) {
     /* One second elapsed, send message. */
     aJsonObject *msg = createMessage();
@@ -86,7 +63,7 @@ int read_temp() {
 
   int t = dht.readTemperature();
 
-  if (isnan(t)) {
+  if (!isnan(t)) {
     return t;
   }
 
@@ -116,12 +93,17 @@ aJsonObject *createMessage()
 {
   aJsonObject *msg = aJson.createObject();
 
+    // Get the analog values first
   int analogValues[6];
   for (int i = 0; i < 6; i++) {
     analogValues[i] = analogRead(i);
   }
   aJsonObject *analog = aJson.createIntArray(analogValues, 6);
   aJson.addItemToObject(msg, "analog", analog);
+
+  // Temp/Humidity
+  aJson.addNumberToObject(msg, "temp", read_temp());
+  aJson.addNumberToObject(msg, "humidity", read_humidity());
 
   return msg;
 }
