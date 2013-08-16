@@ -27,8 +27,6 @@ void prints(char *fmt, ... ){
 void setup() {
   Serial.begin(115200);
 
-  calibrate_analog();
-
   dht.begin();
 }
 
