@@ -15,11 +15,6 @@ aJsonStream serial_stream(&Serial);
 
 DHT dht(DHTPIN, DHTTYPE);
 
-// variables:
-int sensorValue = 0;         // the sensor value
-int sensorMin[6] = {0};        // minimum sensor value
-int sensorMax[6] = {0};           // maximum sensor value
-
 void prints(char *fmt, ... ){
   char tmp[128]; // resulting string limited to 128 chars
   va_list args;
@@ -111,34 +106,4 @@ void processMessage(aJsonObject *msg)
     Serial.println(pwmval->valueint, DEC);
     analogWrite(pins[i], pwmval->valueint);
   }
-}
-
-void calibrate_analog(){
-    // turn on LED to signal the start of the calibration period:
-  pinMode(13, OUTPUT);
-  digitalWrite(13, HIGH);
-
-  // calibrate during the first five seconds 
-  while (millis() < 5000) {
-      for (int i = 0; i < 6; i++) {
-        sensorValue = analogRead(i);
-
-        // record the maximum sensor value
-        if (sensorValue > sensorMax[i]) {
-          sensorMax[i] = sensorValue;
-        }
-
-        // record the minimum sensor value
-        if (sensorValue < sensorMin[i]) {
-          sensorMin[i] = sensorValue;
-        }
-      }
-  }
-
-  for (int i = 0; i < 6; i++) {
-      prints("%d: %d %d",i,sensorMin[i],sensorMax[i]);
-  }
-
-  // signal the end of the calibration period
-  digitalWrite(13, LOW);
 }
