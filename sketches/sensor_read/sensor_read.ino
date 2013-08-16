@@ -15,6 +15,11 @@ aJsonStream serial_stream(&Serial);
 
 DHT dht(DHTPIN, DHTTYPE);
 
+// variables:
+int sensorValue = 0;         // the sensor value
+int sensorMin[6] = {0};        // minimum sensor value
+int sensorMax[6] = {0};           // maximum sensor value
+
 void prints(char *fmt, ... ){
   char tmp[128]; // resulting string limited to 128 chars
   va_list args;
@@ -26,6 +31,8 @@ void prints(char *fmt, ... ){
 
 void setup() {
   Serial.begin(115200);
+
+  calibrate_analog();
 
   dht.begin();
 }
@@ -61,13 +68,21 @@ aJsonObject *read_sensors()
     // Get the analog values first
   int analogValues[6];
   for (int i = 0; i < 6; i++) {
-    analogValues[i] = analogRead(i);
+    sensorValue = analogRead(i);
+
+    // apply the calibration to the sensor reading
+    sensorValue = map(sensorValue, sensorMin[i], sensorMax[i], 0, 100);
+
+    // in case the sensor value is outside the range seen during calibration
+    sensorValue = constrain(sensorValue, 0, 100);
+
+    analogValues[i] = sensorValue;
   }
   aJsonObject *analog = aJson.createIntArray(analogValues, 6);
   aJson.addItemToObject(msg, "analog", analog);
 
   // Temp/Humidity
-  aJson.addNumberToObject(msg, "temp", dht.readTemp());
+  aJson.addNumberToObject(msg, "temp", dht.readTemperature());
   aJson.addNumberToObject(msg, "humidity", dht.readHumidity());
 
   return msg;
@@ -104,4 +119,30 @@ void processMessage(aJsonObject *msg)
     Serial.println(pwmval->valueint, DEC);
     analogWrite(pins[i], pwmval->valueint);
   }
+}
+
+void calibrate_analog(){
+    // turn on LED to signal the start of the calibration period:
+  pinMode(13, OUTPUT);
+  digitalWrite(13, HIGH);
+
+  // calibrate during the first five seconds 
+  while (millis() < 5000) {
+      for (int i = 0; i < 6; i++) {
+        sensorValue = analogRead(i);
+
+        // record the maximum sensor value
+        if (sensorValue > sensorMax[i]) {
+          sensorMax[i] = sensorValue;
+        }
+
+        // record the minimum sensor value
+        if (sensorValue < sensorMin[i]) {
+          sensorMin[i] = sensorValue;
+        }
+      }
+  }
+
+  // signal the end of the calibration period
+  digitalWrite(13, LOW);
 }
