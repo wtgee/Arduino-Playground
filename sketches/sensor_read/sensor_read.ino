@@ -111,20 +111,6 @@ int read_humidity() {
   return 0;
 }
 
-/*
-* read_photocell
- *
- * Reads the analog value from a photocell at given analog pin
- */
-int read_photocell(int photocellPin) {
-  int light_value = analogRead(photocellPin);
-
-  if(!isnan(light_value)) {
-      return light_value;
-  }
-
-  return 0;
-}
 /* Generate message like: { "analog": [0, 200, 400, 600, 800, 1000] } */
 aJsonObject *createMessage()
 {
