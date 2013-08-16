@@ -30,7 +30,7 @@ class ArduinoSerialMonitor(FigureCanvas):
 
         # Timer
         self.timerEvent(None)
-        self.timer = self.startTimer(100)
+        self.timer = self.startTimer(50)
 
     def _setup_plot(self):
         # Image setup
