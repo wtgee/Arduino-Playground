@@ -45,7 +45,7 @@ void loop() {
 
   Serial.println(aJson.print(root));
 
-  delay(2000);
+  delay(500);
 }
 
 /*
