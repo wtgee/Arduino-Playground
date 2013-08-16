@@ -1,74 +1,100 @@
+/* Reading of sensors off Arduino
+ *
+ *
+ */
+
+#include <stdarg.h>
+#include <aJSON.h>
 #include "DHT.h"
 
 #define DHTPIN 2
 #define DHTTYPE DHT11
 
+aJsonObject *root;
+
 DHT dht(DHTPIN, DHTTYPE);
 
-#include <stdarg.h>
-
-int photocellPin = 0;     // the cell and 10K pulldown are connected to a0
-int photocellReading;     // the analog reading from the sensor divider
-byte val = 0;
-
 void prints(char *fmt, ... ){
-        char tmp[128]; // resulting string limited to 128 chars
-        va_list args;
-        va_start (args, fmt );
-        vsnprintf(tmp, 128, fmt, args);
-        va_end (args);
-        Serial.println(tmp);
+  char tmp[128]; // resulting string limited to 128 chars
+  va_list args;
+  va_start (args, fmt );
+  vsnprintf(tmp, 128, fmt, args);
+  va_end (args);
+  Serial.println(tmp);
 }
 
 void setup() {
   Serial.begin(115200); 
 
-  // Send initial blank values
-  prints("{\"humidity\": 0, \"temp\": 0, \"photocell_0\": 0}");
- 
+  root = aJson.createObject();
+
   dht.begin();
 }
 
 void loop() {
-  read_temp_humidity();
-  read_photocell(photocellPin);
+  aJson.addNumberToObject(root,"temp",read_temp());
+  aJson.addNumberToObject(root,"humidity",read_humidity());
 
-  delay(1000);
+  int photoCells[] = { 0,1,2,3,4  };
+
+  char str[15];
+  for (int i = 0; i < 5; i++){
+    sprintf(str,"photocell.%d",i);
+    aJson.addNumberToObject(root, str, read_photocell(i));
+  }
+
+  Serial.println(aJson.print(root));
+
+  delay(2000);
 }
 
 /*
-* read_temp_humidity
-*
-* Reading temperature or humidity takes about 250 milliseconds!
-* Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-*/
-void read_temp_humidity() {
+* read_temp
+ *
+ * Reading temperature or humidity takes about 250 milliseconds!
+ * Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+ */
+int read_temp() {
 
-  int h = dht.readHumidity();
   int t = dht.readTemperature();
 
+  if (isnan(t)) {
+    return t;
+  }
+
+  return 0;
+}
+
+/*
+* read_humidity
+ *
+ * Reading temperature or humidity takes about 250 milliseconds!
+ * Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+ */
+int read_humidity() {
+
+  int h = dht.readHumidity();
+
   // check if returns are valid, if they are NaN (not a number) then something went wrong!
-  if (isnan(t) || isnan(h)) {
-    prints("Failed to read from DHT");
-  } else {
-    prints("{\"humidity\": %d, \"temp\": %d}",h,t);    
-  }  
+  if (!isnan(h)) {
+      return h;
+  }
+
+  return 0;
 }
 
 /*
 * read_photocell
-*
-* Reads the analog value from a photocell at given analog pin
-*/
-void read_photocell(int photocellPin) {
-  val = analogRead(photocellPin);
+ *
+ * Reads the analog value from a photocell at given analog pin
+ */
+int read_photocell(int photocellPin) {
+  int light_value = analogRead(photocellPin);
 
-  if (isnan(val)) {
-    prints("Failed to read from photocell %d",photocellPin);
-  } else {
-    // We want this to be a percentage of maximum (256)
-    int percent = ((val*100)/256);
-    
-    prints("{\"photocell_%d\": %d}",photocellPin, percent);
-  }  
+  if(!isnan(light_value)) {
+      return light_value;
+  }
+
+  return 0;
 }
+
