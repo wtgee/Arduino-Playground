@@ -24,14 +24,14 @@ void prints(char *fmt, ... ){
 }
 
 void setup() {
-  Serial.begin(115200); 
-
-  root = aJson.createObject();
+  Serial.begin(115200);
 
   dht.begin();
 }
 
 void loop() {
+  root = aJson.createObject();
+
   aJson.addNumberToObject(root,"temp",read_temp());
   aJson.addNumberToObject(root,"humidity",read_humidity());
 
@@ -43,8 +43,9 @@ void loop() {
     aJson.addNumberToObject(root, str, read_photocell(i));
   }
 
-  Serial.println(aJson.print(root));
+  Serial.print(aJson.print(root));
 
+  Serial.println();
   delay(500);
 }
 
