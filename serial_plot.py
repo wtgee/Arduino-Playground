@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 
 import time
+import datetime
 import json
 import serial
 import matplotlib.pyplot as plt
+import numpy as np
 import sys
 from PyQt4 import QtGui
 from matplotlib.figure import Figure
@@ -17,7 +19,7 @@ class ArduinoSerialMonitor(FigureCanvas):
     def __init__(self):
         # initialize the iteration counter for scrolling window
         self.count = 0
-        self.window_size = 30
+        self.window_size = 30 # seconds of history to display
 
         # Get the class for getting data from serial sensor
         self.serial_reader = SerialData()
@@ -38,34 +40,29 @@ class ArduinoSerialMonitor(FigureCanvas):
 
         FigureCanvas.__init__(self, self.fig)
 
-        # Do an initial reading of the data to get info
-        # on the sensors. Arduino sends a number of blank lines
-        # to start so we skip those
-        initial_reading = self.get_reading()
-        while True:
-            if len(initial_reading):
-                break
+        # Create plot, set x and y axes
+        ax = self.fig.add_subplot(111)
+        ax.set_ylim(0, 100)
 
-            initial_reading = self.get_reading()
+        # Build up timestamps
+        base = datetime.datetime.now()
+        date_ranges = [base - datetime.timedelta(seconds=x) for x in range(0,self.window_size)]
 
-        print("initial_reading: {}".format(initial_reading))
         for pin in range(5):
-            # Create an empty array to store data for this sensor
-            sensor_values = []
+            sensor_values = [0] * self.window_size
 
-            # Create plot, set x and y axes
-            ax = self.fig.add_subplot(111)
-            ax.set_xlim(0, self.window_size)
-            ax.set_ylim(0, 100)
-
-            s_plot, = ax.plot([],sensor_values, label="Analog {}".format(pin))
-
-            ax.legend()
+            s_plot, = ax.plot(date_ranges,sensor_values, label="Analog {}".format(pin))
 
             # Add the ax and plot to our monitor
             self.sensor_readings[pin] = sensor_values
             plot_dict = {'plot': s_plot, 'ax': ax}
             self.sensor_plots[pin] = plot_dict
+
+        # Show legend
+        ax.legend()
+
+        # Fix date formatting
+        self.fig.autofmt_xdate();
 
         # Draw the initial canvas
         self.fig.canvas.draw()
@@ -74,6 +71,7 @@ class ArduinoSerialMonitor(FigureCanvas):
     def _prepare_sensor_data(self):
         """Helper function to return serial sensor info"""
         sensor_value = self.serial_reader.next()
+        print(sensor_value)
         sensor_data = dict()
         if len(sensor_value) > 0:
             try:
@@ -101,17 +99,16 @@ class ArduinoSerialMonitor(FigureCanvas):
                     # if our number of readings is abover the size, start scrolling.
                     # We add 15 so the right edge of line is not butting up against edge
                     # of graph but has some nice buffer space
-                    if(self.count >= self.window_size):
-                        self.sensor_plots[pin]['ax'].set_xlim(
-                                self.count - self.window_size,
-                                self.count + 15
-                                )
 
                     num_readings = len(self.sensor_readings[pin])
 
+                    # Build up timestamps
+                    base = datetime.datetime.now()
+                    date_ranges = [base - datetime.timedelta(seconds=x) for x in range(0,num_readings*5,5)]
+
                     # Update lines data using the lists with new data
                     plot_data = (range(num_readings),self.sensor_readings[pin])
-                    self.sensor_plots[pin]['plot'].set_data(range(num_readings), self.sensor_readings[pin])
+                    self.sensor_plots[pin]['plot'].set_data(date_ranges,self.sensor_readings[pin])
 
         # Force a redraw of the Figure
         self.fig.canvas.draw()
