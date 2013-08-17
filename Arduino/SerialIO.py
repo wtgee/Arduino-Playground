@@ -28,6 +28,8 @@ def receiving(ser):
         except UnicodeDecodeError:
             print("Unicode problem")
             time.sleep(2)
+        except:
+            print("Uknown problem")
 
 
 class SerialData(object):
